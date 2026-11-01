@@ -1,6 +1,6 @@
 {
   "name": "mawid",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Self-hosted appointment booking for salons, barbers, clinics and coaches. Bookings on WhatsApp, team calendars, reminders, 8 languages, zero commissions.",
   "main": "server.js",
   "license": "MIT",

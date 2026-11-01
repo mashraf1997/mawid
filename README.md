@@ -52,6 +52,7 @@ Mawid gives every business its **own booking page** on its own server and domain
 - Node.js + Express, **2 dependencies**, no database to set up (atomic JSON files)
 - Runs on the smallest VPS
 - **Automatic HTTPS** with Caddy, **setup code** to protect a fresh install, **demo mode**
+- **Agency mode**: one server hosts many clients, each on their own domain ([details](#agency-mode-host-all-your-clients-on-one-server))
 - Tested availability engine (time zones, buffers, overlapping staff, "until midnight" hours)
 
 ## Screenshots
@@ -117,6 +118,29 @@ npm install --omit=dev
 npm start
 ```
 
+## Agency mode: host all your clients on one server
+
+Freelancers and agencies can run **one Mawid server for many clients**. Each client gets their own fully separate booking page (own admin, password, data and photos) at `client.yourdomain.com` or their own domain, with automatic HTTPS. You manage everyone from one panel at `/hub`.
+
+<img src="docs/hub.png" alt="Agency panel" width="100%">
+
+- ➕ **New client in seconds**: pick a name and address, then send the link and setup code on WhatsApp in one tap
+- 🌐 **Subdomains or custom domains**, with HTTPS certificates issued automatically on the first visit
+- 💰 **Billing tracker**: monthly fee, *paid until*, due-soon and overdue lists, and a one-tap *Paid +1 month*
+- ⏸️ **Suspend** clients who don't pay (their page shows "temporarily unavailable") and resume them in one click
+- 🔑 **Reset a client's password** when they forget it, plus bookings per client for the last 30 days
+- 🗑️ Deleting a client moves their data to a `trash/` folder instead of erasing it
+
+**Set up** (with [`examples/agency/`](examples/agency)):
+
+1. Point two DNS records at your server: `apps.example.com` and the wildcard `*.apps.example.com`.
+2. Run the compose file with `BASE_DOMAIN=apps.example.com`.
+3. Open `https://apps.example.com/hub` and enter the setup code from `docker compose logs mawid`.
+
+Clients then live at `https://<name>.apps.example.com`. To use a client's own domain, add it in the panel and have them point its A record at your server. Caddy only requests certificates for addresses the panel knows about (`/_hub/tls-check`), so nobody can make your server request certificates for other domains.
+
+To try it locally, run `HUB_MODE=true npm start` and open `http://localhost:3000/hub`. Clients work at `http://<name>.localhost:3000` in Chrome and Firefox.
+
 ## Configuration
 
 | Variable | Default | Description |
@@ -130,6 +154,9 @@ npm start
 | `DEMO_PASSWORD` | `demo1234` | Admin password shown in the demo |
 | `DEMO_RESET_MINUTES` | `60` | Demo reset interval |
 | `DEMO_LANG` / `DEMO_TYPE` | `en` / `salon` | Demo language and business type (`barber`, `salon`, `clinic`, `coach`, `other`) |
+| `HUB_MODE` | `false` | `true` turns the server into an [agency hub](#agency-mode-host-all-your-clients-on-one-server) for many clients |
+| `BASE_DOMAIN` | `localhost` | Agency mode: clients get `<name>.BASE_DOMAIN` |
+| `HUB_DOMAIN` | *(empty)* | Agency mode: only show the panel on this host |
 
 ### Live demo
 
