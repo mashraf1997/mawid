@@ -534,3 +534,9 @@ h3 .i { color: var(--brand-text); width: 18px; height: 18px; }
 [dir=rtl] .flip-rtl { transform: scaleX(-1); }
 
 .cal-hours span:first-child { transform: none; }
+
+/* Telegram notifications card */
+.ok-chip { display: inline-flex; align-items: center; gap: 4px; margin-inline-start: auto; font-size: 12px; font-weight: 800; padding: 2px 10px; border-radius: 999px; background: #dcfae6; color: var(--ok); }
+.ok-chip .i { width: 13px; height: 13px; color: inherit; }
+.steps-list { margin: 0 0 14px; padding-inline-start: 22px; display: grid; gap: 4px; font-size: 14px; color: var(--muted); }
+.steps-list li::marker { color: var(--brand-text); font-weight: 800; }

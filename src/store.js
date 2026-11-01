@@ -62,6 +62,9 @@ function defaultSettings() {
     maxDays: 30,
     cancelHours: 3,
     policy: '',
+    depositPercent: 0,
+    paymentInfo: '',
+    paymentLink: '',
   };
 }
 

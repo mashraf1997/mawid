@@ -86,6 +86,10 @@ function buildBooking(input, store, { now, admin = false } = {}) {
   if (!admin && !customer.phone) return { error: 'phone_required' };
 
   const duration = Number(service.duration) || 30;
+  const price = Number(service.price) || 0;
+  // Online bookings can require a deposit; they stay pending until the owner marks it received.
+  const pct = admin ? 0 : Math.min(100, Math.max(0, Number(s.depositPercent) || 0));
+  const deposit = pct && price ? round2((price * pct) / 100) : 0;
   return {
     booking: {
       serviceId: service.id,
@@ -98,9 +102,11 @@ function buildBooking(input, store, { now, admin = false } = {}) {
       end: start + duration,
       duration,
       buffer: Number(service.buffer) || 0,
-      price: Number(service.price) || 0,
+      price,
+      deposit,
+      depositPaid: false,
       customer,
-      status: admin || s.autoConfirm ? 'confirmed' : 'pending',
+      status: !deposit && (admin || s.autoConfirm) ? 'confirmed' : 'pending',
       source: admin ? 'admin' : 'online',
     },
   };
@@ -126,9 +132,15 @@ function bookingMessage(b, settings, manageUrl) {
   out.push(`🙋 ${t.msgCustomer}: ${b.customer.name}`);
   if (b.customer.phone) out.push(`📞 ${t.msgPhone}: ${b.customer.phone}`);
   if (b.customer.notes) out.push(`📝 ${t.msgNotes}: ${b.customer.notes}`);
+  if (b.deposit) out.push(`💳 ${t.msgDeposit}: ${formatMoney(b.deposit, settings.currency)}${b.depositPaid ? ' ✓' : ` (${t.msgUnpaid})`}`);
   if (b.status === 'pending') out.push('', `⏳ ${t.msgPending}`);
   if (manageUrl) out.push('', `🔗 ${manageUrl}`);
   return out.join('\n');
+}
+
+function cancelMessage(b, settings) {
+  const t = strings(settings.lang);
+  return [`❌ *${t.msgCancelledByCustomer} #${b.no}*`, `${b.emoji || '✨'} ${b.serviceName}${b.staffName ? ` · ${b.staffName}` : ''}`, `🗓️ ${dateLabel(b.date, settings.lang)} · ${timeLabel(b.start, settings.lang)}`, `🙋 ${b.customer.name}`].join('\n');
 }
 
 function reminderMessage(b, settings, manageUrl) {
@@ -207,6 +219,7 @@ module.exports = {
   buildBooking,
   canCustomerCancel,
   bookingMessage,
+  cancelMessage,
   reminderMessage,
   whatsappUrl,
   zonedToUtc,

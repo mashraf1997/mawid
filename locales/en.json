@@ -78,7 +78,13 @@
     "msgNotes": "Notes",
     "msgPending": "Waiting for your confirmation",
     "msgReminder": "Hi {name} 👋\nJust a reminder of your {service} appointment at {shop}:\n🗓️ {date} · {time}\nSee you soon!",
-    "closedDay": "Closed"
+    "closedDay": "Closed",
+    "depositTitle": "Pay a {amount} deposit to confirm",
+    "depositHint": "We’re holding your time until the deposit arrives. Send the payment receipt on WhatsApp.",
+    "payNow": "Pay now",
+    "msgDeposit": "Deposit",
+    "msgUnpaid": "not paid yet",
+    "msgCancelledByCustomer": "Cancelled by the customer"
   },
   "admin": {
     "save": "Save",
@@ -284,6 +290,32 @@
     "tip2": "Send the link as your WhatsApp auto-reply.",
     "tip3": "Remind tomorrow's customers every evening — it cuts no-shows a lot.",
     "tip4": "Add a short break after long services so you're never rushed.",
-    "newBookingAlert": "🔔 New booking!"
+    "newBookingAlert": "🔔 New booking!",
+    "notifications": "Instant notifications (Telegram)",
+    "notifyHint": "Get a message on your phone the moment something new arrives — free, through your own Telegram bot.",
+    "notifyStep1": "In Telegram, open @BotFather, send /newbot and copy the token it gives you.",
+    "notifyStep2": "Paste the token below, then open your new bot and press Start.",
+    "notifyStep3": "Press “Find my chat”, then send a test.",
+    "botToken": "Bot token",
+    "tokenSaved": "Saved ({hint}) — paste a new one to replace it",
+    "chatId": "Chat ID",
+    "detectChat": "Find my chat",
+    "chatFound": "Chat found ✓",
+    "chatNotFound": "No chat yet — open your bot in Telegram and press Start first.",
+    "sendTest": "Send test",
+    "testSent": "Test message sent ✓",
+    "testFailed": "Couldn’t send — check the token and chat ID",
+    "testMessage": "If you can read this, notifications are working 🎉",
+    "notifyConnected": "Connected",
+    "disconnect": "Disconnect",
+    "invalidToken": "That doesn’t look like a bot token",
+    "deposits": "Deposits",
+    "depositPercent": "Deposit for online bookings",
+    "depositPercentHint": "0 = no deposit. Bookings with a deposit wait until you mark it received.",
+    "paymentInfo": "How customers pay",
+    "paymentInfoPh": "e.g. InstaPay: studio@instapay · Vodafone Cash: 0100 000 0000",
+    "paymentLink": "Payment link (optional)",
+    "depositDue": "Deposit due",
+    "depositReceived": "Deposit received"
   }
 }

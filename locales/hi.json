@@ -78,7 +78,13 @@
     "msgNotes": "नोट्स",
     "msgPending": "आपकी पुष्टि का इंतज़ार",
     "msgReminder": "नमस्ते {name} 👋\n{shop} में आपके {service} अपॉइंटमेंट की याद दिला रहे हैं:\n🗓️ {date} · {time}\nजल्द मिलते हैं!",
-    "closedDay": "बंद"
+    "closedDay": "बंद",
+    "depositTitle": "पक्का करने के लिए {amount} एडवांस दें",
+    "depositHint": "एडवांस मिलने तक आपका समय रोक कर रखा है। पेमेंट की रसीद WhatsApp पर भेजें।",
+    "payNow": "अभी पेमेंट करें",
+    "msgDeposit": "एडवांस",
+    "msgUnpaid": "अभी नहीं दिया",
+    "msgCancelledByCustomer": "ग्राहक ने रद्द किया"
   },
   "admin": {
     "save": "सेव करें",
@@ -284,6 +290,32 @@
     "tip2": "लिंक को WhatsApp ऑटो-रिप्लाई बना दें।",
     "tip3": "हर शाम कल के ग्राहकों को याद दिलाएँ, न आने वाले बहुत कम हो जाते हैं।",
     "tip4": "लंबी सर्विस के बाद छोटा ब्रेक रखें ताकि जल्दबाज़ी न हो।",
-    "newBookingAlert": "🔔 नई बुकिंग!"
+    "newBookingAlert": "🔔 नई बुकिंग!",
+    "notifications": "तुरंत नोटिफ़िकेशन (Telegram)",
+    "notifyHint": "कुछ नया आते ही आपके फ़ोन पर मैसेज आएगा, मुफ़्त, आपके अपने Telegram बॉट से।",
+    "notifyStep1": "Telegram में @BotFather खोलें, /newbot भेजें और मिला हुआ टोकन कॉपी करें।",
+    "notifyStep2": "टोकन नीचे पेस्ट करें, फिर अपना नया बॉट खोलकर Start दबाएँ।",
+    "notifyStep3": "“मेरी चैट ढूँढें” दबाएँ, फिर टेस्ट भेजें।",
+    "botToken": "बॉट टोकन",
+    "tokenSaved": "सेव है ({hint}) — बदलने के लिए नया पेस्ट करें",
+    "chatId": "चैट ID",
+    "detectChat": "मेरी चैट ढूँढें",
+    "chatFound": "चैट मिल गई ✓",
+    "chatNotFound": "अभी कोई चैट नहीं — पहले Telegram में बॉट खोलकर Start दबाएँ।",
+    "sendTest": "टेस्ट भेजें",
+    "testSent": "टेस्ट मैसेज भेज दिया ✓",
+    "testFailed": "भेज नहीं पाए — टोकन और चैट ID जाँचें",
+    "testMessage": "अगर आप यह पढ़ पा रहे हैं, तो नोटिफ़िकेशन काम कर रहे हैं 🎉",
+    "notifyConnected": "जुड़ा हुआ",
+    "disconnect": "डिस्कनेक्ट करें",
+    "invalidToken": "यह बॉट टोकन जैसा नहीं लगता",
+    "deposits": "एडवांस",
+    "depositPercent": "ऑनलाइन बुकिंग के लिए एडवांस",
+    "depositPercentHint": "0 = कोई एडवांस नहीं। एडवांस वाली बुकिंग तब तक रुकी रहती है जब तक आप उसे मिला हुआ न मार्क करें।",
+    "paymentInfo": "ग्राहक पेमेंट कैसे करें",
+    "paymentInfoPh": "जैसे UPI: studio@upi",
+    "paymentLink": "पेमेंट लिंक (वैकल्पिक)",
+    "depositDue": "एडवांस बाकी",
+    "depositReceived": "एडवांस मिल गया"
   }
 }

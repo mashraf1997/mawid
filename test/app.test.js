@@ -278,3 +278,26 @@ test('demo mode seeds a realistic, non-overlapping calendar', async () => {
   }
   fs.rmSync(demoDir, { recursive: true, force: true });
 });
+
+test('deposits: online bookings wait for the deposit, owner marks it received', async () => {
+  await call('PUT', '/api/admin/settings', { depositPercent: 25, paymentInfo: 'InstaPay: fade@instapay', paymentLink: 'https://pay.example.com/fade', autoConfirm: true }, { auth: true });
+  const combo = await svc('Haircut + beard'); // 28
+  const r = await call('POST', '/api/bookings', { serviceId: combo.id, date: '2026-11-10', start: 600, customer: { name: 'Dep', phone: '1' } });
+  assert.equal(r.json.status, 'pending', 'deposit overrides auto-confirm');
+  assert.equal(r.json.deposit, 7);
+  assert.equal(r.json.paymentInfo, 'InstaPay: fade@instapay');
+  assert.match(decodeURIComponent(r.json.whatsappUrl), /Deposit: 7 EGP \(not paid yet\)/);
+  const page = await call('GET', `/b/${r.json.token}`);
+  assert.match(page.text, /deposit-card/);
+  assert.match(page.text, /pay\.example\.com\/fade/);
+  const bk = (await call('GET', '/api/admin/bookings?from=2026-11-10&to=2026-11-10', undefined, { auth: true })).json.bookings.find((x) => x.no === r.json.no);
+  const paid = await call('PUT', `/api/admin/bookings/${bk.id}`, { depositPaid: true }, { auth: true });
+  assert.equal(paid.json.depositPaid, true);
+  assert.equal(paid.json.status, 'confirmed');
+  assert.ok(!(await call('GET', `/b/${r.json.token}`)).text.includes('deposit-card'));
+  // Owner bookings never ask for a deposit
+  const own = await call('POST', '/api/admin/bookings', { serviceId: combo.id, date: '2026-11-10', start: 720, customer: { name: 'Own' } }, { auth: true });
+  assert.equal(own.json.deposit, 0);
+  assert.equal(own.json.status, 'confirmed');
+  await call('PUT', '/api/admin/settings', { depositPercent: 0 }, { auth: true });
+});

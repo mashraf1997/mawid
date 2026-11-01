@@ -78,7 +78,13 @@
     "msgNotes": "Catatan",
     "msgPending": "Menunggu konfirmasi kamu",
     "msgReminder": "Halo {name} 👋\nMengingatkan janji {service} kamu di {shop}:\n🗓️ {date} · {time}\nSampai jumpa!",
-    "closedDay": "Tutup"
+    "closedDay": "Tutup",
+    "depositTitle": "Bayar DP {amount} untuk konfirmasi",
+    "depositHint": "Jam kamu ditahan sampai DP diterima. Kirim bukti transfer lewat WhatsApp.",
+    "payNow": "Bayar sekarang",
+    "msgDeposit": "DP",
+    "msgUnpaid": "belum dibayar",
+    "msgCancelledByCustomer": "Dibatalkan oleh pelanggan"
   },
   "admin": {
     "save": "Simpan",
@@ -284,6 +290,32 @@
     "tip2": "Jadikan link sebagai balasan otomatis WhatsApp.",
     "tip3": "Ingatkan pelanggan besok setiap malam, yang tidak datang jadi jauh berkurang.",
     "tip4": "Tambahkan jeda setelah layanan panjang supaya tidak terburu-buru.",
-    "newBookingAlert": "🔔 Janji baru!"
+    "newBookingAlert": "🔔 Janji baru!",
+    "notifications": "Notifikasi instan (Telegram)",
+    "notifyHint": "Dapatkan pesan di HP begitu ada yang baru, gratis, lewat bot Telegram milikmu sendiri.",
+    "notifyStep1": "Di Telegram, buka @BotFather, kirim /newbot, lalu salin token yang diberikan.",
+    "notifyStep2": "Tempel token di bawah, lalu buka bot barumu dan tekan Mulai.",
+    "notifyStep3": "Tekan “Cari chat saya”, lalu kirim tes.",
+    "botToken": "Token bot",
+    "tokenSaved": "Tersimpan ({hint}) — tempel token baru untuk menggantinya",
+    "chatId": "ID chat",
+    "detectChat": "Cari chat saya",
+    "chatFound": "Chat ditemukan ✓",
+    "chatNotFound": "Belum ada chat — buka bot di Telegram dan tekan Mulai dulu.",
+    "sendTest": "Kirim tes",
+    "testSent": "Pesan tes terkirim ✓",
+    "testFailed": "Gagal mengirim — periksa token dan ID chat",
+    "testMessage": "Kalau kamu bisa membaca ini, notifikasi berfungsi 🎉",
+    "notifyConnected": "Terhubung",
+    "disconnect": "Putuskan",
+    "invalidToken": "Itu bukan seperti token bot",
+    "deposits": "DP",
+    "depositPercent": "DP untuk booking online",
+    "depositPercentHint": "0 = tanpa DP. Booking dengan DP menunggu sampai kamu tandai diterima.",
+    "paymentInfo": "Cara pelanggan membayar",
+    "paymentInfoPh": "mis. BCA 0000000000 a.n. Studio · GoPay 0812 0000 0000",
+    "paymentLink": "Link pembayaran (opsional)",
+    "depositDue": "DP belum dibayar",
+    "depositReceived": "DP diterima"
   }
 }

@@ -295,14 +295,16 @@
     const isPast = b.date < today() || (b.date === today() && b.end <= state.data.now.minutes);
     const isNow = b.date === today() && b.start <= state.data.now.minutes && b.end > state.data.now.minutes;
     const actions = [];
-    if (!compact && ['pending', 'confirmed'].includes(b.status)) {
+    const depositDue = b.deposit && !b.depositPaid && ['pending', 'confirmed'].includes(b.status);
+    if (!compact && depositDue) actions.push(`<button class="btn sm" data-deposit="${b.id}" type="button">${ic('cash')}<span class="hide-sm">${esc(T('depositReceived'))}</span></button>`);
+    else if (!compact && ['pending', 'confirmed'].includes(b.status)) {
       if (b.status === 'pending') actions.push(`<button class="btn sm" data-status="confirmed" data-id="${b.id}" type="button">${ic('check')}<span class="hide-sm">${esc(T('markConfirmed'))}</span></button>`);
       else if (isPast || isNow) actions.push(`<button class="btn sm" data-status="completed" data-id="${b.id}" type="button">${ic('check')}<span class="hide-sm">${esc(T('markCompleted'))}</span></button>`);
     }
     return `<div class="bk${isPast ? ' past' : ''}${isNow ? ' now' : ''}" data-open="${b.id}" style="--sc:hsl(${staffHue(b.staffId)} 60% 50%)">
       <span class="em">${esc(b.emoji || '✨')}</span>
       <div class="bd"><b>${esc(b.customer.name)}</b><span>${esc(b.serviceName)}${b.staffName ? ` · ${esc(b.staffName)}` : ''}${showDate ? ` · ${esc(fmtDate(b.date))} ${esc(timeLabel(b.start))}` : ''}</span></div>
-      ${statusChip(b.status)}
+      ${depositDue ? `<span class="chip pending">${ic('cash', 'i xs')}${esc(money(b.deposit))}</span>` : statusChip(b.status)}
       <div class="acts">${actions.join('')}</div>
     </div>`;
   }
@@ -427,7 +429,7 @@
         <div>${ic('calendar')}<b>${esc(fmtDate(b.date, { weekday: 'long', day: 'numeric', month: 'long' }))} · ${esc(timeLabel(b.start))} – ${esc(timeLabel(b.end))}</b></div>
         ${b.staffName ? `<div>${ic('user')}${esc(b.staffName)}</div>` : ''}
         <div>${ic('users')}<b>${esc(b.customer.name)}</b>${b.customer.phone ? ` · <a href="tel:${esc(b.customer.phone)}">${esc(b.customer.phone)}</a>` : ''}</div>
-        ${b.price ? `<div>${ic('cash')}${esc(money(b.price))}</div>` : ''}
+        ${b.price ? `<div>${ic('cash')}${esc(money(b.price))}${b.deposit ? ` · ${esc(T('deposits'))}: <b>${esc(money(b.deposit))}</b> ${b.depositPaid ? '✓' : `<span class="chip pending">${esc(T('depositDue'))}</span>`}` : ''}</div>` : ''}
         ${b.customer.notes ? `<div>${ic('edit')}${esc(b.customer.notes)}</div>` : ''}
       </div>
       ${upcoming ? `<form id="resched" class="card" style="padding:12px;margin-bottom:12px">
@@ -438,7 +440,8 @@
           <button class="btn sm" type="submit">${ic('check')}${esc(T('save'))}</button>
         </div></form>` : ''}
       <div class="modal-actions" style="flex-wrap:wrap">
-        ${b.status === 'pending' ? `<button class="btn" data-set="confirmed">${ic('check')}${esc(T('markConfirmed'))}</button>` : ''}
+        ${b.deposit && !b.depositPaid && upcoming ? `<button class="btn" data-paid="1">${ic('cash')}${esc(T('depositReceived'))}</button>` : ''}
+        ${b.status === 'pending' && !(b.deposit && !b.depositPaid) ? `<button class="btn" data-set="confirmed">${ic('check')}${esc(T('markConfirmed'))}</button>` : ''}
         ${upcoming ? `<button class="btn" data-set="completed">${ic('check')}${esc(T('markCompleted'))}</button><button class="btn line" data-set="noshow">${esc(T('markNoshow'))}</button><button class="btn danger" data-set="cancelled">${ic('x')}${esc(T('markCancelled'))}</button>` : `<button class="btn line" data-set="confirmed">${esc(T('reopen'))}</button>`}
         ${b.customer.phone ? `<button class="btn wa" data-wa="">${ic('whatsapp')}${esc(T('chat'))}</button>` : ''}
         ${b.customer.phone && upcoming ? `<button class="btn line" data-wa="reminder">${ic('bell')}${esc(T('remind'))}</button>` : ''}
@@ -466,6 +469,12 @@
     box.addEventListener('click', async (e) => {
       const set = e.target.closest('[data-set]');
       const wa = e.target.closest('[data-wa]');
+      if (e.target.closest('[data-paid]')) {
+        await api('PUT', `/api/admin/bookings/${b.id}`, { depositPaid: true });
+        toast(T('saved'));
+        closeModal();
+        return renderTab();
+      }
       if (set) {
         await setStatus(b.id, set.dataset.set);
         closeModal();
@@ -541,6 +550,13 @@
     view.onclick = async (e) => {
       const rem = e.target.closest('[data-remind]');
       const st2 = e.target.closest('[data-status]');
+      const dep = e.target.closest('[data-deposit]');
+      if (dep) {
+        e.stopPropagation();
+        await api('PUT', `/api/admin/bookings/${dep.dataset.deposit}`, { depositPaid: true });
+        toast(T('saved'));
+        return renderTab();
+      }
       if (rem) {
         await openWhatsApp(rem.dataset.remind, 'reminder');
         rem.className = 'btn sm done';
@@ -1022,6 +1038,55 @@
   };
 
   // ======================= SETTINGS =======================
+  // ---- Telegram notifications card (Settings) ----
+  async function renderNotify(box) {
+    const n = await api('GET', '/api/admin/notify');
+    box.innerHTML = `
+      <h3>${ic('bell')}${esc(T('notifications'))}${n.connected ? `<span class="ok-chip">${ic('check')}${esc(T('notifyConnected'))}</span>` : ''}</h3>
+      <p class="muted small" style="margin-top:-6px">${esc(T('notifyHint'))}</p>
+      <ol class="steps-list"><li>${esc(T('notifyStep1'))}</li><li>${esc(T('notifyStep2'))}</li><li>${esc(T('notifyStep3'))}</li></ol>
+      <form id="nf">
+        <label class="field"><span>${esc(T('botToken'))}</span><input name="token" autocomplete="off" spellcheck="false" placeholder="123456789:AA…" dir="ltr">${n.hasToken ? `<small>${esc(T('tokenSaved').replace('{hint}', n.tokenHint))}</small>` : ''}</label>
+        <div class="share-row" style="align-items:flex-end">
+          <label class="field" style="flex:1;margin:0"><span>${esc(T('chatId'))}</span><input name="chat" value="${esc(n.telegramChat)}" dir="ltr"></label>
+          <button class="btn line" type="button" id="ndetect">${ic('search')}${esc(T('detectChat'))}</button>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:14px">
+          <button class="btn" type="submit">${ic('check')}${esc(T('save'))}</button>
+          <button class="btn line" type="button" id="ntest" ${n.connected ? '' : 'disabled'}>${ic('bell')}${esc(T('sendTest'))}</button>
+          ${n.hasToken ? `<button class="btn danger" type="button" id="nclear">${esc(T('disconnect'))}</button>` : ''}
+        </div>
+      </form>`;
+    const f = $('#nf', box);
+    const fail = (err, fallback) => toast(err.code === 'demo' ? T('demoBlocked') : err.code === 'invalid_token' ? T('invalidToken') : T(fallback), true);
+    f.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      try {
+        await api('PUT', '/api/admin/notify', { telegramToken: f.token.value, telegramChat: f.chat.value });
+        toast(T('saved'));
+        renderNotify(box);
+      } catch (err) { fail(err, 'error'); }
+    });
+    $('#ndetect', box).addEventListener('click', async () => {
+      try {
+        const r = await api('POST', '/api/admin/notify/detect', { telegramToken: f.token.value });
+        if (!r.chats.length) return toast(T('chatNotFound'), true);
+        f.chat.value = r.chats[0].id;
+        toast(`${T('chatFound')} ${r.chats[0].name}`);
+      } catch (err) { fail(err, 'chatNotFound'); }
+    });
+    $('#ntest', box).addEventListener('click', async () => {
+      try {
+        await api('POST', '/api/admin/notify/test', { text: T('testMessage') });
+        toast(T('testSent'));
+      } catch (err) { fail(err, 'testFailed'); }
+    });
+    const clear = $('#nclear', box);
+    if (clear) clear.addEventListener('click', async () => {
+      try { await api('PUT', '/api/admin/notify', { clear: true }); renderNotify(box); } catch (err) { fail(err, 'error'); }
+    });
+  }
+
   VIEWS.settings = async (view) => {
     const s = state.data.settings;
     const sel = (name, values, current, label) => `<select name="${name}">${values.map((v) => `<option value="${v}" ${Number(v) === Number(current) ? 'selected' : ''}>${label(v)}</option>`).join('')}</select>`;
@@ -1051,6 +1116,13 @@
           </div>
           <label class="field"><span>${esc(T('policy'))}</span><textarea name="policy" rows="2" maxlength="600" placeholder="${esc(T('policyPh'))}">${esc(s.policy)}</textarea></label>
         </div>
+        <div class="card"><h3>${ic('cash')}${esc(T('deposits'))}</h3>
+          <div class="grid2">
+            <label class="field"><span>${esc(T('depositPercent'))}</span><div class="unit"><input name="depositPercent" type="number" min="0" max="100" value="${esc(s.depositPercent || 0)}"><span>%</span></div><small>${esc(T('depositPercentHint'))}</small></label>
+            <label class="field"><span>${esc(T('paymentLink'))}</span><input name="paymentLink" type="url" maxlength="500" value="${esc(s.paymentLink || '')}" placeholder="https://…" dir="ltr"></label>
+          </div>
+          <label class="field"><span>${esc(T('paymentInfo'))}</span><textarea name="paymentInfo" rows="2" maxlength="300" placeholder="${esc(T('paymentInfoPh'))}">${esc(s.paymentInfo || '')}</textarea></label>
+        </div>
         <div class="card"><h3>${ic('clock')}${esc(T('hoursTitle'))}</h3>
           <div id="hours">${weekEditor(s.hours, 'bh')}</div>
           <label class="field" style="margin-top:12px"><span>${esc(T('timezone'))}</span><input name="timezone" list="tzlist" value="${esc(s.timezone || browserTimezone())}"></label>
@@ -1068,6 +1140,7 @@
         </div>
         <div class="save-bar" style="margin-bottom:16px"><button class="btn block" type="submit">${ic('check')}${esc(T('save'))}</button></div>
       </form>
+      <div class="card" id="notify-card"></div>
       <div class="card"><h3>${ic('lock')}${esc(T('security'))}</h3>
         <form id="pw" class="grid2">
           <label class="field"><span>${esc(T('currentPassword'))}</span><input name="current" type="password" autocomplete="current-password" required></label>
@@ -1077,6 +1150,7 @@
       <div class="card"><h3>${ic('download')}${esc(T('backup'))}</h3><p class="muted small">${esc(T('backupHint'))}</p>
         <div style="display:flex;gap:8px;flex-wrap:wrap"><a class="btn line" href="/api/admin/export" download>${ic('download')}${esc(T('exportData'))}</a>
         <label class="btn line" style="cursor:pointer">${ic('upload')}${esc(T('importData'))}<input type="file" accept="application/json,.json" id="imp" hidden></label></div></div>`;
+    renderNotify($('#notify-card', view));
     const f = $('#sf', view);
     wireWeek($('#hours', view));
     f.addEventListener('submit', async (e) => {

@@ -44,6 +44,8 @@ Mawid gives every business its **own booking page** on its own server and domain
 - ✂️ **Services** with duration, price and a **break after** (cleanup / rest time)
 - ⚙️ **Booking rules**: auto-confirm or approve each booking, slot interval, minimum notice, how far ahead, cancellation window, booking policy
 - 🎨 **Design** tab with **4 themes** (Modern, Soft, Elegant, Bold), 5 Arabic-friendly fonts, any colour, logo and cover — with a **live phone preview**
+- 💳 **Deposits**: ask online customers to pay a percentage up front by InstaPay, mobile wallet, bank transfer or a payment link; the booking waits until you mark the deposit received ([how](#deposits))
+- 📲 **Instant Telegram notifications** for new bookings and cancellations, free with your own bot
 - 🔔 Sound alert for new bookings, QR code and printable poster, backups
 
 **For the server**
@@ -136,6 +138,32 @@ docker run -d -p 80:3000 -e DEMO_MODE=true ghcr.io/mashraf1997/mawid:latest
 ```
 
 A salon with a team, a month of realistic bookings and visitor stats. Visitors can log in with the password shown on screen; password changes and restores are disabled, and everything resets every hour.
+
+### Deposits
+
+No-shows cost money, so Mawid can ask for a deposit on online bookings. In **Settings → Deposits**, set:
+
+- **Deposit for online bookings**: a percentage of the service price (`0` turns it off)
+- **How customers pay**: free text, for example `InstaPay: name@instapay · Vodafone Cash 010…`
+- **Payment link** (optional): any checkout page, such as a Stripe, PayPal or Paymob payment link
+
+After booking, the customer sees the amount, your payment details and a **Pay now** button, on the confirmation screen and on their private booking page. A booking with a deposit stays **pending** (even with auto-confirm on) until you press **Deposit received** on the Today screen or in the booking, which confirms it. Bookings you add yourself never ask for a deposit. Mawid doesn't handle money itself, so there are no fees and no payment keys to manage.
+
+### Telegram notifications
+
+Get a free, instant message on your phone for every new booking or customer cancellation, even when the admin panel is closed:
+
+1. In Telegram, open [@BotFather](https://t.me/BotFather), send `/newbot` and copy the token it gives you.
+2. Paste the token in **Settings → Instant notifications (Telegram)**, then open your new bot and press **Start**.
+3. Press **Find my chat**, then **Send test**.
+
+The message includes a link straight to the Today screen. To send notifications to a group, add the bot to the group and send a message there before pressing *Find my chat*. The bot token is stored on your server only: it's never shown again in the browser and is left out of backups.
+
+### Multiple branches
+
+Each branch runs its own copy of Mawid: its own admin, services, team, calendar, data and WhatsApp number, usually on its own subdomain (`downtown.example.com`, `mall.example.com`…). Copies are tiny (about 60 MB of RAM each), so one small VPS can run many.
+
+[`examples/branches/`](examples/branches) has a ready-to-use `docker-compose.yml` and `Caddyfile` for two branches behind automatic HTTPS. To add a branch, copy a service block, give it a new volume, and add one line to the `Caddyfile`. Point each subdomain's DNS at the server, run `docker compose up -d`, and open each subdomain's `/admin` to set it up. On a Hostinger VPS you can also deploy the template several times instead.
 
 ### How availability works
 

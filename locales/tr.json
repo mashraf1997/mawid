@@ -78,7 +78,13 @@
     "msgNotes": "Notlar",
     "msgPending": "Onayını bekliyor",
     "msgReminder": "Merhaba {name} 👋\n{shop}’daki {service} randevunu hatırlatmak istedik:\n🗓️ {date} · {time}\nGörüşmek üzere!",
-    "closedDay": "Kapalı"
+    "closedDay": "Kapalı",
+    "depositTitle": "Onaylamak için {amount} kapora öde",
+    "depositHint": "Kapora gelene kadar saatin ayrılmış durumda. Ödeme dekontunu WhatsApp’tan gönder.",
+    "payNow": "Şimdi öde",
+    "msgDeposit": "Kapora",
+    "msgUnpaid": "henüz ödenmedi",
+    "msgCancelledByCustomer": "Müşteri iptal etti"
   },
   "admin": {
     "save": "Kaydet",
@@ -284,6 +290,32 @@
     "tip2": "Linki WhatsApp otomatik yanıtı yap.",
     "tip3": "Her akşam yarının müşterilerine hatırlat; gelmeyenler çok azalır.",
     "tip4": "Uzun hizmetlerden sonra kısa bir mola ekle, hiç acele etme.",
-    "newBookingAlert": "🔔 Yeni randevu!"
+    "newBookingAlert": "🔔 Yeni randevu!",
+    "notifications": "Anlık bildirimler (Telegram)",
+    "notifyHint": "Yeni bir şey geldiği anda telefonuna mesaj gelsin; ücretsiz, kendi Telegram botunla.",
+    "notifyStep1": "Telegram’da @BotFather’ı aç, /newbot gönder ve verdiği token’ı kopyala.",
+    "notifyStep2": "Token’ı aşağıya yapıştır, sonra yeni botunu açıp Başlat’a bas.",
+    "notifyStep3": "“Sohbetimi bul”a bas, ardından bir test gönder.",
+    "botToken": "Bot token’ı",
+    "tokenSaved": "Kaydedildi ({hint}) — değiştirmek için yenisini yapıştır",
+    "chatId": "Sohbet ID",
+    "detectChat": "Sohbetimi bul",
+    "chatFound": "Sohbet bulundu ✓",
+    "chatNotFound": "Henüz sohbet yok — önce Telegram’da botunu açıp Başlat’a bas.",
+    "sendTest": "Test gönder",
+    "testSent": "Test mesajı gönderildi ✓",
+    "testFailed": "Gönderilemedi — token’ı ve sohbet ID’sini kontrol et",
+    "testMessage": "Bunu okuyorsan bildirimler çalışıyor 🎉",
+    "notifyConnected": "Bağlı",
+    "disconnect": "Bağlantıyı kes",
+    "invalidToken": "Bu bir bot token’ına benzemiyor",
+    "deposits": "Kapora",
+    "depositPercent": "Online randevular için kapora",
+    "depositPercentHint": "0 = kapora yok. Kaporalı randevular, alındı olarak işaretleyene kadar bekler.",
+    "paymentInfo": "Müşteriler nasıl öder",
+    "paymentInfoPh": "ör. IBAN: TR00 0000 · Papara: 0000000000",
+    "paymentLink": "Ödeme linki (isteğe bağlı)",
+    "depositDue": "Kapora bekleniyor",
+    "depositReceived": "Kapora alındı"
   }
 }

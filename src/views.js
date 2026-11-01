@@ -251,6 +251,12 @@ ${shopHeader({ s, t, lang, now, languages: [] })}
       ${b.price ? `<div><dt>${icon('cash')}${esc(t.price)}</dt><dd>${esc(B.formatMoney(b.price, s.currency))}</dd></div>` : ''}
       ${s.address ? `<div><dt>${icon('pin')}${esc(t.directions)}</dt><dd>${safeUrl(s.mapUrl) ? `<a href="${esc(safeUrl(s.mapUrl))}" target="_blank" rel="noopener">${esc(s.address)}</a>` : esc(s.address)}</dd></div>` : ''}
     </dl>
+    ${b.deposit && !b.depositPaid && ['pending', 'confirmed'].includes(b.status) ? `<div class="deposit-card">
+      <b>${icon('cash')}${esc(t.depositTitle.replace('{amount}', B.formatMoney(b.deposit, s.currency)))}</b>
+      ${s.paymentInfo ? `<p class="pay-info">${esc(s.paymentInfo)}</p>` : ''}
+      <p class="muted small">${esc(t.depositHint)}</p>
+      ${safeUrl(s.paymentLink) ? `<a class="btn" href="${esc(safeUrl(s.paymentLink))}" target="_blank" rel="noopener">${icon('cash')}${esc(t.payNow)}</a>` : ''}
+    </div>` : ''}
     <div class="actions">
       ${['pending', 'confirmed'].includes(b.status) ? `<a class="btn" href="/b/${esc(b.token)}.ics" download>${icon('calendar-plus')}${esc(t.addCalendar)}</a>` : ''}
       ${digits ? `<a class="btn wa" href="https://wa.me/${esc(digits)}" target="_blank" rel="noopener">${icon('whatsapp')}WhatsApp</a>` : ''}

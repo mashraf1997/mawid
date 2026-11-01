@@ -78,7 +78,13 @@
     "msgNotes": "Remarques",
     "msgPending": "En attente de votre confirmation",
     "msgReminder": "Bonjour {name} 👋\nPetit rappel de votre rendez-vous {service} chez {shop} :\n🗓️ {date} · {time}\nÀ bientôt !",
-    "closedDay": "Fermé"
+    "closedDay": "Fermé",
+    "depositTitle": "Versez un acompte de {amount} pour confirmer",
+    "depositHint": "Votre créneau est réservé jusqu’à réception de l’acompte. Envoyez le justificatif sur WhatsApp.",
+    "payNow": "Payer maintenant",
+    "msgDeposit": "Acompte",
+    "msgUnpaid": "pas encore payé",
+    "msgCancelledByCustomer": "Annulée par le client"
   },
   "admin": {
     "save": "Enregistrer",
@@ -284,6 +290,32 @@
     "tip2": "Utilisez le lien comme réponse automatique WhatsApp.",
     "tip3": "Rappelez chaque soir les clients du lendemain : les absences chutent.",
     "tip4": "Ajoutez une pause après les longues prestations pour ne jamais courir.",
-    "newBookingAlert": "🔔 Nouvelle réservation !"
+    "newBookingAlert": "🔔 Nouvelle réservation !",
+    "notifications": "Notifications instantanées (Telegram)",
+    "notifyHint": "Recevez un message sur votre téléphone dès qu’il y a du nouveau, gratuitement, via votre propre bot Telegram.",
+    "notifyStep1": "Dans Telegram, ouvrez @BotFather, envoyez /newbot et copiez le token fourni.",
+    "notifyStep2": "Collez le token ci-dessous, puis ouvrez votre nouveau bot et appuyez sur Démarrer.",
+    "notifyStep3": "Appuyez sur « Trouver ma conversation », puis envoyez un test.",
+    "botToken": "Token du bot",
+    "tokenSaved": "Enregistré ({hint}) — collez-en un nouveau pour le remplacer",
+    "chatId": "ID de conversation",
+    "detectChat": "Trouver ma conversation",
+    "chatFound": "Conversation trouvée ✓",
+    "chatNotFound": "Aucune conversation pour l’instant — ouvrez votre bot dans Telegram et appuyez sur Démarrer.",
+    "sendTest": "Envoyer un test",
+    "testSent": "Message de test envoyé ✓",
+    "testFailed": "Envoi impossible — vérifiez le token et l’ID de conversation",
+    "testMessage": "Si vous lisez ceci, les notifications fonctionnent 🎉",
+    "notifyConnected": "Connecté",
+    "disconnect": "Déconnecter",
+    "invalidToken": "Cela ne ressemble pas à un token de bot",
+    "deposits": "Acomptes",
+    "depositPercent": "Acompte pour les réservations en ligne",
+    "depositPercentHint": "0 = pas d’acompte. Les réservations avec acompte attendent que vous le marquiez comme reçu.",
+    "paymentInfo": "Comment payer",
+    "paymentInfoPh": "ex. Virement : FR76 0000 · Lydia : 06 00 00 00 00",
+    "paymentLink": "Lien de paiement (facultatif)",
+    "depositDue": "Acompte dû",
+    "depositReceived": "Acompte reçu"
   }
 }

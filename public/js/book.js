@@ -274,6 +274,12 @@
         <h2 style="justify-content:center">${esc(pending ? t.pendingTitle : t.booked)}</h2>
         <p class="muted">${esc((pending ? t.pendingHint : t.bookedHint).replace('{shop}', shop.name))}</p>
       </div>
+      ${r.deposit ? `<div class="deposit-card">
+        <b>${ic('cash')}${esc(t.depositTitle.replace('{amount}', money(r.deposit)))}</b>
+        ${r.paymentInfo ? `<p class="pay-info">${esc(r.paymentInfo)}</p>` : ''}
+        <p class="muted small">${esc(t.depositHint)}</p>
+        ${r.paymentLink ? `<a class="btn" href="${esc(r.paymentLink)}" target="_blank" rel="noopener">${ic('cash')}${esc(t.payNow)}</a>` : ''}
+      </div>` : ''}
       ${summaryCard().replace('class="summary-card"', 'class="summary-card ticket-lite"')}
       <div class="actions">
         ${shop.whatsapp ? `<a class="btn wa" href="${esc(r.whatsappUrl)}" target="_blank" rel="noopener">${ic('whatsapp')}${esc(t.sendWhatsApp)}</a>` : ''}

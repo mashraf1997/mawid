@@ -78,7 +78,13 @@
     "msgNotes": "Notas",
     "msgPending": "Pendiente de tu confirmación",
     "msgReminder": "Hola {name} 👋\nTe recordamos tu cita de {service} en {shop}:\n🗓️ {date} · {time}\n¡Te esperamos!",
-    "closedDay": "Cerrado"
+    "closedDay": "Cerrado",
+    "depositTitle": "Paga un anticipo de {amount} para confirmar",
+    "depositHint": "Reservamos tu hora hasta recibir el anticipo. Envía el comprobante por WhatsApp.",
+    "payNow": "Pagar ahora",
+    "msgDeposit": "Anticipo",
+    "msgUnpaid": "sin pagar",
+    "msgCancelledByCustomer": "Cancelada por el cliente"
   },
   "admin": {
     "save": "Guardar",
@@ -284,6 +290,32 @@
     "tip2": "Usa el enlace como respuesta automática de WhatsApp.",
     "tip3": "Recuerda cada noche a los clientes de mañana: reduce mucho las ausencias.",
     "tip4": "Añade un descanso tras los servicios largos para no ir con prisa.",
-    "newBookingAlert": "🔔 ¡Nueva reserva!"
+    "newBookingAlert": "🔔 ¡Nueva reserva!",
+    "notifications": "Notificaciones al instante (Telegram)",
+    "notifyHint": "Recibe un mensaje en tu móvil en cuanto llegue algo nuevo, gratis, con tu propio bot de Telegram.",
+    "notifyStep1": "En Telegram abre @BotFather, envía /newbot y copia el token que te da.",
+    "notifyStep2": "Pega el token abajo, luego abre tu nuevo bot y pulsa Iniciar.",
+    "notifyStep3": "Pulsa “Buscar mi chat” y envía una prueba.",
+    "botToken": "Token del bot",
+    "tokenSaved": "Guardado ({hint}): pega uno nuevo para reemplazarlo",
+    "chatId": "ID del chat",
+    "detectChat": "Buscar mi chat",
+    "chatFound": "Chat encontrado ✓",
+    "chatNotFound": "Aún no hay chat: abre tu bot en Telegram y pulsa Iniciar primero.",
+    "sendTest": "Enviar prueba",
+    "testSent": "Mensaje de prueba enviado ✓",
+    "testFailed": "No se pudo enviar: revisa el token y el ID del chat",
+    "testMessage": "Si puedes leer esto, las notificaciones funcionan 🎉",
+    "notifyConnected": "Conectado",
+    "disconnect": "Desconectar",
+    "invalidToken": "Eso no parece un token de bot",
+    "deposits": "Anticipos",
+    "depositPercent": "Anticipo para reservas en línea",
+    "depositPercentHint": "0 = sin anticipo. Las reservas con anticipo esperan hasta que lo marques como recibido.",
+    "paymentInfo": "Cómo pagan los clientes",
+    "paymentInfoPh": "p. ej. Transferencia: banco 0000 · Mercado Pago: alias.estudio",
+    "paymentLink": "Enlace de pago (opcional)",
+    "depositDue": "Anticipo pendiente",
+    "depositReceived": "Anticipo recibido"
   }
 }

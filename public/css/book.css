@@ -830,3 +830,13 @@ main { max-width: 760px; margin: 0 auto; padding: 4px 16px; }
 .theme-bold .date, .theme-bold .slot { border-color: #111; box-shadow: 2px 2px 0 #111; }
 .theme-bold .steps li { height: 8px; border: 2px solid #111; }
 .theme-bold .meta .price { background: #ffd23f; color: #111; padding: 0 8px; border-radius: 6px; border: 1.5px solid #111; }
+
+/* Deposit request */
+.deposit-card { display: grid; gap: 8px; background: #fff7e6; color: #5c3b00; border: 1px dashed #f5b84b; border-radius: var(--radius); padding: 16px; margin-bottom: 14px; text-align: start; }
+.deposit-card b { display: flex; align-items: center; gap: 8px; font-size: 16px; }
+.deposit-card p { margin: 0; }
+.deposit-card .pay-info { background: #fff; border-radius: 12px; padding: 10px 12px; font-weight: 700; white-space: pre-line; unicode-bidi: plaintext; }
+.deposit-card .muted { color: #8a6a2b; }
+.deposit-card .btn { width: 100%; }
+@media (prefers-color-scheme: dark) { body:not(.theme-bold):not(.theme-soft) .deposit-card { background: #2a2111; color: #f8d58c; border-color: #8a6a2b; } }
+.theme-elegant .deposit-card { background: #2a2111; color: #f8d58c; border-color: #8a6a2b; }

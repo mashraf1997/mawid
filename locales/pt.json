@@ -78,7 +78,13 @@
     "msgNotes": "Observações",
     "msgPending": "Aguardando sua confirmação",
     "msgReminder": "Olá {name} 👋\nLembrete do seu horário de {service} na {shop}:\n🗓️ {date} · {time}\nAté logo!",
-    "closedDay": "Fechado"
+    "closedDay": "Fechado",
+    "depositTitle": "Pague um sinal de {amount} para confirmar",
+    "depositHint": "Seu horário fica reservado até o sinal chegar. Envie o comprovante pelo WhatsApp.",
+    "payNow": "Pagar agora",
+    "msgDeposit": "Sinal",
+    "msgUnpaid": "ainda não pago",
+    "msgCancelledByCustomer": "Cancelado pelo cliente"
   },
   "admin": {
     "save": "Salvar",
@@ -284,6 +290,32 @@
     "tip2": "Use o link como resposta automática do WhatsApp.",
     "tip3": "Lembre os clientes de amanhã toda noite: as faltas caem muito.",
     "tip4": "Adicione um intervalo depois dos serviços longos para não se apertar.",
-    "newBookingAlert": "🔔 Novo agendamento!"
+    "newBookingAlert": "🔔 Novo agendamento!",
+    "notifications": "Notificações instantâneas (Telegram)",
+    "notifyHint": "Receba uma mensagem no celular assim que chegar algo novo, grátis, pelo seu próprio bot do Telegram.",
+    "notifyStep1": "No Telegram, abra o @BotFather, envie /newbot e copie o token que ele der.",
+    "notifyStep2": "Cole o token abaixo, depois abra seu novo bot e toque em Iniciar.",
+    "notifyStep3": "Toque em “Encontrar meu chat” e envie um teste.",
+    "botToken": "Token do bot",
+    "tokenSaved": "Salvo ({hint}) — cole um novo para substituir",
+    "chatId": "ID do chat",
+    "detectChat": "Encontrar meu chat",
+    "chatFound": "Chat encontrado ✓",
+    "chatNotFound": "Nenhum chat ainda — abra seu bot no Telegram e toque em Iniciar primeiro.",
+    "sendTest": "Enviar teste",
+    "testSent": "Mensagem de teste enviada ✓",
+    "testFailed": "Não foi possível enviar — confira o token e o ID do chat",
+    "testMessage": "Se você está lendo isto, as notificações funcionam 🎉",
+    "notifyConnected": "Conectado",
+    "disconnect": "Desconectar",
+    "invalidToken": "Isso não parece um token de bot",
+    "deposits": "Sinal",
+    "depositPercent": "Sinal para agendamentos online",
+    "depositPercentHint": "0 = sem sinal. Agendamentos com sinal aguardam até você marcar como recebido.",
+    "paymentInfo": "Como os clientes pagam",
+    "paymentInfoPh": "ex.: Pix: estudio@email.com",
+    "paymentLink": "Link de pagamento (opcional)",
+    "depositDue": "Sinal pendente",
+    "depositReceived": "Sinal recebido"
   }
 }

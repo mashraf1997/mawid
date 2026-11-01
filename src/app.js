@@ -15,6 +15,7 @@ const A = require('./availability');
 const B = require('./bookings');
 const { loadSample, BUSINESS_TYPES } = require('./sample');
 const { resetDemo } = require('./demo');
+const notify = require('./notify');
 const { renderBookingPage, renderManagePage, renderPoster, renderManifest } = require('./views');
 
 const PUBLIC_DIR = path.join(__dirname, '..', 'public');
@@ -75,6 +76,9 @@ const SETTINGS_SCHEMA = {
   maxDays: (v) => int(v, 1, 365, 30),
   cancelHours: (v) => int(v, 0, 168, 3),
   policy: (v) => str(v, 600),
+  depositPercent: (v) => int(v, 0, 100, 0),
+  paymentInfo: (v) => str(v, 300),
+  paymentLink: (v) => (/^https?:\/\//i.test(str(v, 500)) ? str(v, 500) : ''),
 };
 
 function cleanSettings(input) {
@@ -276,10 +280,14 @@ function createApp({ dataDir, setupCode, demo = null, quiet = false, clock = nul
     if (result.error) return res.status(result.error === 'slot_taken' ? 409 : 400).json(result);
     const b = store.addBooking(result.booking);
     const text = B.bookingMessage(b, store.settings);
+    notify.notifyInBackground(store.db.notify, `${text}\n\n🔗 ${baseUrl(req)}admin#home`);
     res.json({
       no: b.no,
       token: b.token,
       status: b.status,
+      deposit: b.deposit,
+      paymentInfo: b.deposit ? store.settings.paymentInfo : '',
+      paymentLink: b.deposit ? store.settings.paymentLink : '',
       manageUrl: manageUrl(req, b),
       icsUrl: `/b/${b.token}.ics`,
       whatsappUrl: B.whatsappUrl(store.settings.whatsapp, text),
@@ -292,6 +300,7 @@ function createApp({ dataDir, setupCode, demo = null, quiet = false, clock = nul
     if (!b) return res.status(404).json({ error: 'not_found' });
     if (!B.canCustomerCancel(b, store.settings, now())) return res.status(400).json({ error: 'too_late' });
     store.updateBooking(b.id, { status: 'cancelled', cancelledBy: 'customer' });
+    notify.notifyInBackground(store.db.notify, B.cancelMessage(b, store.settings));
     res.json({ ok: true });
   });
 
@@ -330,6 +339,7 @@ function createApp({ dataDir, setupCode, demo = null, quiet = false, clock = nul
   // ---------- admin API ----------
   const admin = express.Router();
   admin.use(requireAuth);
+  notify.mountRoutes(admin, store, { guard: notInDemo, appName: 'Mawid' });
 
   admin.get('/data', (req, res) => {
     res.json({
@@ -473,6 +483,10 @@ function createApp({ dataDir, setupCode, demo = null, quiet = false, clock = nul
       patch.status = body.status;
     }
     if (body.reminded !== undefined) patch.reminded = bool(body.reminded);
+    if (body.depositPaid !== undefined) {
+      patch.depositPaid = bool(body.depositPaid);
+      if (patch.depositPaid && b.status === 'pending' && patch.status === undefined) patch.status = 'confirmed';
+    }
     if (body.notes !== undefined) patch.customer = { ...b.customer, notes: str(body.notes, 500) };
     res.json(store.updateBooking(b.id, patch));
   });
