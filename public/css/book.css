@@ -840,3 +840,7 @@ main { max-width: 760px; margin: 0 auto; padding: 4px 16px; }
 .deposit-card .btn { width: 100%; }
 @media (prefers-color-scheme: dark) { body:not(.theme-bold):not(.theme-soft) .deposit-card { background: #2a2111; color: #f8d58c; border-color: #8a6a2b; } }
 .theme-elegant .deposit-card { background: #2a2111; color: #f8d58c; border-color: #8a6a2b; }
+
+/* Online deposit */
+.deposit-card.paid { background: #e8f8ee; color: #14532d; border-color: #86d9a5; }
+.pay-confirming { display: flex; align-items: center; gap: 6px; font-weight: 700; }

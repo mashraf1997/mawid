@@ -16,6 +16,12 @@ const B = require('./bookings');
 const { loadSample, BUSINESS_TYPES } = require('./sample');
 const { resetDemo } = require('./demo');
 const notify = require('./notify');
+const payments = require('./payments');
+const wa = require('./whatsapp');
+const mailer = require('./mailer');
+const push = require('./push');
+const backup = require('./backup');
+const { strings } = require('./i18n');
 const { renderBookingPage, renderManagePage, renderPoster, renderManifest } = require('./views');
 
 const PUBLIC_DIR = path.join(__dirname, '..', 'public');
@@ -138,10 +144,11 @@ function intlPhone(phone, shopWhatsapp) {
   return digits;
 }
 
-function createApp({ dataDir, setupCode, demo = null, quiet = false, clock = null }) {
+function createApp({ dataDir, setupCode, demo = null, quiet = false, clock = null, branding = null }) {
   const store = new Store(dataDir);
   const app = express();
   const now = () => (clock ? clock() : A.nowIn(store.settings.timezone));
+  const nowMs = () => (clock && clock().ms) || Date.now();
   const limit = (windowMs, max) => auth.rateLimiter({ windowMs, max });
   const loginLimited = limit(15 * 60 * 1000, 10);
   const setupLimited = limit(15 * 60 * 1000, 10);
@@ -176,6 +183,93 @@ function createApp({ dataDir, setupCode, demo = null, quiet = false, clock = nul
 
   const baseUrl = (req) => `${req.protocol}://${req.get('host')}/`;
   const manageUrl = (req, b) => `${baseUrl(req)}b/${b.token}`;
+
+  // ---------- integrations ----------
+  // Background jobs (webhooks, reminders) link to the last public address.
+  const rememberBase = (req) => {
+    const b = baseUrl(req);
+    if (store.db.publicUrl !== b && !/\/\/(localhost|127\.0\.0\.1)[:/]/.test(b)) {
+      store.db.publicUrl = b;
+      store.save();
+    }
+  };
+  const publicBase = () => store.db.publicUrl || `http://localhost:${process.env.PORT || 3000}/`;
+  const snapshot = () => {
+    const { settings, services, staff, blocks } = store.db;
+    return { app: 'mawid', version: 1, exportedAt: new Date().toISOString(), settings, services, staff, blocks, bookings: store.bookings };
+  };
+  const brand = () => ({ name: store.settings.name, color: store.settings.color });
+  const tx = () => strings(store.settings.lang);
+  const firstName = (n) => String(n || '').trim().split(/\s+/)[0] || '';
+  const fill = (tpl, v) => Object.entries(v).reduce((o, [k, x]) => o.split(`{${k}}`).join(x), tpl);
+  const whenOf = (b) => `${B.dateLabel(b.date, store.settings.lang)} · ${B.timeLabel(b.start, store.settings.lang)}`;
+  const WA_KINDS = [
+    { key: 'confirmed', defaultName: 'mawid_confirmed', params: ['name', 'service', 'when', 'link'], sample: { en: 'Hi {{1}}! Your booking for {{2}} on {{3}} is confirmed ✅ Details or changes: {{4}}', ar: 'أهلًا يا {{1}}! حجزك لـ {{2}} يوم {{3}} اتأكد ✅ التفاصيل أو التعديل: {{4}}' } },
+    { key: 'reminder', defaultName: 'mawid_reminder', params: ['name', 'service', 'when', 'link'], sample: { en: 'Hi {{1}}, a reminder of your {{2}} tomorrow: {{3}}. Need to change it? {{4}}', ar: 'أهلًا يا {{1}}، بنفكرك بميعاد {{2}} بكرة: {{3}}. عايز تغيّر؟ {{4}}' } },
+  ];
+  const venue = () => [store.settings.address].filter(Boolean).join('');
+
+  /** The booking is confirmed: tell the customer once (WhatsApp API + email). */
+  function sendConfirmation(b, base) {
+    if (!b || b.confirmSent || b.status !== 'confirmed') return;
+    const url = `${base}b/${b.token}`;
+    const t = tx();
+    wa.sendInBackground(store, 'confirmed', intlPhone(b.customer.phone, store.settings.whatsapp), [firstName(b.customer.name), b.serviceName, whenOf(b), url]);
+    if (b.customer.email) {
+      const title = fill(t.mailConfirmedTitle, { service: b.serviceName });
+      const { html, text } = mailer.render({ brand: brand(), dir: t.dir, title, body: fill(t.mailConfirmedBody, { name: firstName(b.customer.name), service: b.serviceName, when: whenOf(b), with: b.staffName || '-', place: venue() || store.settings.name }), button: { label: t.mailManage, url }, footer: store.settings.address || '' });
+      mailer.sendInBackground(store, { to: b.customer.email, subject: title, html, text, attachments: [{ filename: `booking-${b.no}.ics`, content: B.ics(b, store.settings, url), contentType: 'text/calendar' }] });
+    }
+    store.updateBooking(b.id, { confirmSent: true });
+  }
+
+  function askForDeposit(b, base) {
+    if (!b.deposit || !b.customer.email) return;
+    const t = tx();
+    const s = store.settings;
+    const title = fill(t.mailDepositTitle, { service: b.serviceName });
+    const { html, text } = mailer.render({ brand: brand(), dir: t.dir, title, body: [fill(t.mailDepositBody, { name: firstName(b.customer.name), amount: B.formatMoney(b.deposit, s.currency), service: b.serviceName, when: whenOf(b) }), s.paymentInfo || ''].filter(Boolean).join('\n\n'), button: { label: t.mailPayDeposit, url: `${base}b/${b.token}` } });
+    mailer.sendInBackground(store, { to: b.customer.email, subject: title, html, text });
+  }
+
+  // Online payments (deposits) land here once, from the return page or a webhook.
+  async function onPaid(kind, id, info) {
+    if (kind !== 'deposit') return;
+    const b = store.getBooking(id);
+    if (!b) return;
+    const patch = { depositPaid: true, depositVia: info.provider };
+    if (b.status === 'pending') patch.status = 'confirmed';
+    store.updateBooking(b.id, patch);
+    sendConfirmation(store.getBooking(b.id), publicBase());
+    notify.alertOwner(store, `💳 *${tx().msgDepositPaidOnline} #${b.no}*\n${b.serviceName} · ${whenOf(b)}\n${B.formatMoney(info.amount, store.settings.currency)} · ${b.customer.name}`, { url: `${publicBase()}admin#home`, path: '/admin#home' });
+  }
+
+  /** Day before (after 10:00): remind confirmed customers who weren't reminded yet. */
+  function sendReminders() {
+    const n = now();
+    if (n.minutes < 10 * 60) return 0;
+    const tomorrow = A.addDays(n.date, 1);
+    const waC = wa.cfgOf(store);
+    const waOn = wa.ready(waC) && (waC.templates.reminder || {}).enabled;
+    const mailOn = mailer.ready(mailer.cfgOf(store));
+    if (!waOn && !mailOn) return 0;
+    const t = tx();
+    let sent = 0;
+    for (const b of store.bookings.filter((x) => x.date === tomorrow && x.status === 'confirmed' && !x.reminded)) {
+      const url = `${publicBase()}b/${b.token}`;
+      if (waOn) wa.sendInBackground(store, 'reminder', intlPhone(b.customer.phone, store.settings.whatsapp), [firstName(b.customer.name), b.serviceName, whenOf(b), url]);
+      if (mailOn && b.customer.email) {
+        const title = fill(t.mailReminderTitle, { service: b.serviceName });
+        const { html, text } = mailer.render({ brand: brand(), dir: t.dir, title, body: fill(t.mailReminderBody, { name: firstName(b.customer.name), service: b.serviceName, when: whenOf(b), place: venue() || store.settings.name }), button: { label: t.mailManage, url } });
+        mailer.sendInBackground(store, { to: b.customer.email, subject: title, html, text });
+      }
+      b.reminded = true;
+      sent++;
+    }
+    if (sent) store.saveBookings();
+    return sent;
+  }
+  const viewSettings = () => (branding ? { ...store.settings, _brand: branding() } : store.settings);
   const pickLang = (req) => (LANGS.includes(req.query.lang) ? req.query.lang : store.settings.lang);
   const requireAuth = (req, res, next) => (auth.isAuthenticated(req, store.db) ? next() : res.status(401).json({ error: 'unauthorized' }));
   const notInDemo = (req, res, next) => (demo ? res.status(403).json({ error: 'demo' }) : next());
@@ -184,6 +278,7 @@ function createApp({ dataDir, setupCode, demo = null, quiet = false, clock = nul
 
   app.use(express.static(PUBLIC_DIR, { maxAge: '1h', index: false }));
   app.use('/uploads', express.static(store.uploadsDir, { maxAge: '30d', immutable: true }));
+  payments.mountPublic(app, store, express, { onPaid });
   app.get('/healthz', (req, res) => res.json({ ok: true }));
 
   // ---------- public pages ----------
@@ -198,7 +293,7 @@ function createApp({ dataDir, setupCode, demo = null, quiet = false, clock = nul
     res.setHeader('Cache-Control', 'no-cache');
     res.type('html').send(
       renderBookingPage({
-        settings: store.settings,
+        settings: viewSettings(),
         services: store.sorted('services'),
         staff: store.sorted('staff'),
         lang: pickLang(req),
@@ -224,8 +319,11 @@ function createApp({ dataDir, setupCode, demo = null, quiet = false, clock = nul
     res.setHeader('Cache-Control', 'no-store');
     res.status(b ? 200 : 404).type('html').send(
       renderManagePage({
-        settings: store.settings,
+        settings: viewSettings(),
         booking: b,
+        payOnline: !!b && !demo && payments.ready(payments.cfgOf(store)),
+        payPending: req.query.pay === 'pending',
+        justPaid: req.query.paid === '1',
         lang: pickLang(req),
         baseUrl: baseUrl(req),
         now: now(),
@@ -256,6 +354,7 @@ function createApp({ dataDir, setupCode, demo = null, quiet = false, clock = nul
       demo: demo ? { password: demo.password, resetMinutes: demo.resetMinutes } : null,
       languages: LANGUAGES,
       businessTypes: BUSINESS_TYPES,
+      brand: branding ? branding() : null,
     });
   });
 
@@ -280,8 +379,12 @@ function createApp({ dataDir, setupCode, demo = null, quiet = false, clock = nul
     if (result.error) return res.status(result.error === 'slot_taken' ? 409 : 400).json(result);
     const b = store.addBooking(result.booking);
     const text = B.bookingMessage(b, store.settings);
-    notify.notifyInBackground(store.db.notify, `${text}\n\n🔗 ${baseUrl(req)}admin#home`);
+    rememberBase(req);
+    notify.alertOwner(store, text, { url: `${baseUrl(req)}admin#home`, path: '/admin#home' });
+    if (b.status === 'confirmed') sendConfirmation(b, baseUrl(req));
+    else askForDeposit(b, baseUrl(req));
     res.json({
+      payOnline: !!b.deposit && !demo && payments.ready(payments.cfgOf(store)),
       no: b.no,
       token: b.token,
       status: b.status,
@@ -295,12 +398,26 @@ function createApp({ dataDir, setupCode, demo = null, quiet = false, clock = nul
     });
   });
 
+  // Pay the deposit online (Stripe / Paymob).
+  api.post('/bookings/:token/checkout', async (req, res) => {
+    if (bookLimited(req.ip)) return res.status(429).json({ error: 'rate_limited' });
+    const b = store.byToken(req.params.token);
+    if (!b) return res.status(404).json({ error: 'not_found' });
+    if (!b.deposit || b.depositPaid || !A.ACTIVE.includes(b.status)) return res.status(400).json({ error: 'not_payable' });
+    try {
+      const r = await payments.createCheckout(store, baseUrl(req), { kind: 'deposit', id: b.id, amount: b.deposit, title: `${b.serviceName} · #${b.no}`, customer: b.customer, returnTo: `/b/${b.token}` });
+      res.json({ url: r.url });
+    } catch (err) {
+      res.status(400).json({ error: err.code || 'provider_error' });
+    }
+  });
+
   api.post('/bookings/:token/cancel', (req, res) => {
     const b = store.byToken(req.params.token);
     if (!b) return res.status(404).json({ error: 'not_found' });
     if (!B.canCustomerCancel(b, store.settings, now())) return res.status(400).json({ error: 'too_late' });
     store.updateBooking(b.id, { status: 'cancelled', cancelledBy: 'customer' });
-    notify.notifyInBackground(store.db.notify, B.cancelMessage(b, store.settings));
+    notify.alertOwner(store, B.cancelMessage(b, store.settings), { url: `${baseUrl(req)}admin#home`, path: '/admin#home' });
     res.json({ ok: true });
   });
 
@@ -340,6 +457,15 @@ function createApp({ dataDir, setupCode, demo = null, quiet = false, clock = nul
   const admin = express.Router();
   admin.use(requireAuth);
   notify.mountRoutes(admin, store, { guard: notInDemo, appName: 'Mawid' });
+  payments.mountAdmin(admin, store, { guard: notInDemo, baseUrl });
+  wa.mountAdmin(admin, store, { guard: notInDemo, kinds: WA_KINDS });
+  mailer.mountAdmin(admin, store, { guard: notInDemo, appName: 'Mawid' });
+  push.mountAdmin(admin, store, { appName: 'Mawid' });
+  backup.mountAdmin(admin, store, { snapshot, guard: notInDemo, appName: 'Mawid' });
+  admin.use((req, res, next) => {
+    rememberBase(req);
+    next();
+  });
 
   admin.get('/data', (req, res) => {
     res.json({
@@ -459,7 +585,9 @@ function createApp({ dataDir, setupCode, demo = null, quiet = false, clock = nul
   admin.post('/bookings', (req, res) => {
     const result = B.buildBooking(req.body || {}, store, { now: now(), admin: true });
     if (result.error) return res.status(result.error === 'slot_taken' ? 409 : 400).json(result);
-    res.json(store.addBooking(result.booking));
+    const b = store.addBooking(result.booking);
+    sendConfirmation(b, baseUrl(req));
+    res.json(store.getBooking(b.id));
   });
 
   admin.put('/bookings/:id', (req, res) => {
@@ -488,7 +616,9 @@ function createApp({ dataDir, setupCode, demo = null, quiet = false, clock = nul
       if (patch.depositPaid && b.status === 'pending' && patch.status === undefined) patch.status = 'confirmed';
     }
     if (body.notes !== undefined) patch.customer = { ...b.customer, notes: str(body.notes, 500) };
-    res.json(store.updateBooking(b.id, patch));
+    store.updateBooking(b.id, patch);
+    sendConfirmation(store.getBooking(b.id), baseUrl(req));
+    res.json(store.getBooking(b.id));
   });
 
   admin.get('/bookings/:id/whatsapp', (req, res) => {
@@ -517,9 +647,8 @@ function createApp({ dataDir, setupCode, demo = null, quiet = false, clock = nul
   });
 
   admin.get('/export', (req, res) => {
-    const { settings, services, staff, blocks } = store.db;
     res.setHeader('Content-Disposition', `attachment; filename="mawid-backup-${new Date().toISOString().slice(0, 10)}.json"`);
-    res.json({ app: 'mawid', version: 1, exportedAt: new Date().toISOString(), settings, services, staff, blocks, bookings: store.bookings });
+    res.json(snapshot());
   });
 
   admin.post('/import', notInDemo, (req, res) => {
@@ -554,9 +683,15 @@ function createApp({ dataDir, setupCode, demo = null, quiet = false, clock = nul
     if (err.type === 'entity.too.large') return res.status(413).json({ error: 'too_large' });
     if (err.type === 'entity.parse.failed') return res.status(400).json({ error: 'invalid_json' });
     console.error(err);
+    notify.alertError(store, 'Mawid', err);
     res.status(500).json({ error: 'server_error' });
   });
 
+  if (!demo) {
+    backup.schedule(store, { snapshot, mailer, alert: (text) => notify.alertOwner(store, text), appName: 'Mawid' });
+    setInterval(sendReminders, 60 * 60 * 1000).unref();
+  }
+  app.locals.runReminders = sendReminders;
   app.locals.store = store;
   app.locals.setupCode = store.db.setupCode;
   return app;

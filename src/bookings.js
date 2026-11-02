@@ -81,8 +81,9 @@ function buildBooking(input, store, { now, admin = false } = {}) {
   const member = staff.find((m) => m.id === staffId);
 
   const c = input.customer || {};
-  const customer = { name: clean(c.name, 80), phone: clean(c.phone, 30), notes: clean(c.notes, 500) };
+  const customer = { name: clean(c.name, 80), phone: clean(c.phone, 30), email: clean(c.email, 120).toLowerCase(), notes: clean(c.notes, 500) };
   if (!customer.name) return { error: 'name_required' };
+  if (customer.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(customer.email)) return { error: 'invalid_email' };
   if (!admin && !customer.phone) return { error: 'phone_required' };
 
   const duration = Number(service.duration) || 30;

@@ -212,6 +212,7 @@
       <form id="form" novalidate>
         <label class="field"><span>${esc(t.yourName)} *</span><input name="name" autocomplete="name" maxlength="80" value="${esc(saved.name || '')}" required></label>
         <label class="field"><span>${esc(t.yourPhone)} *</span><input name="phone" type="tel" autocomplete="tel" maxlength="30" value="${esc(saved.phone || '')}" required></label>
+        <label class="field"><span>${esc(t.yourEmail)} <small class="muted">(${esc(t.optional)})</small></span><input name="email" type="email" autocomplete="email" maxlength="120" value="${esc(saved.email || '')}"><small class="muted">${esc(t.emailHint)}</small></label>
         <label class="field"><span>${esc(t.notes)}</span><textarea name="notes" rows="2" maxlength="500"></textarea></label>
         <button class="btn" type="submit" id="confirm" style="width:100%">${ic('check')}<span>${esc(t.confirmBooking)}</span></button>
         <p class="err" id="err" role="alert"></p>
@@ -239,9 +240,9 @@
           staffId: state.staffId,
           date: state.date,
           start: state.start,
-          customer: { name: f.name, phone: f.phone, notes: f.notes },
+          customer: { name: f.name, phone: f.phone, email: f.email, notes: f.notes },
         });
-        storage.set(CUSTOMER_KEY, { name: f.name, phone: f.phone });
+        storage.set(CUSTOMER_KEY, { name: f.name, phone: f.phone, email: f.email || '' });
         renderDone();
       } catch (ex) {
         btn.disabled = false;
@@ -249,7 +250,7 @@
         if (ex.code === 'slot_taken') {
           err.textContent = t.slotTaken;
           setTimeout(() => { renderTime(); }, 1400);
-        } else err.textContent = ex.code === 'closed' ? t.closed : t.errorGeneric;
+        } else err.textContent = ex.code === 'closed' ? t.closed : ex.code === 'invalid_email' ? t.invalidEmail : t.errorGeneric;
       }
     });
   }
@@ -276,9 +277,10 @@
       </div>
       ${r.deposit ? `<div class="deposit-card">
         <b>${ic('cash')}${esc(t.depositTitle.replace('{amount}', money(r.deposit)))}</b>
-        ${r.paymentInfo ? `<p class="pay-info">${esc(r.paymentInfo)}</p>` : ''}
+        ${r.payOnline ? `<button class="btn" type="button" id="pay-online">${ic('cash')}${esc(t.payDepositOnline)}</button>` : ''}
+        ${!r.payOnline && r.paymentInfo ? `<p class="pay-info">${esc(r.paymentInfo)}</p>` : ''}
         <p class="muted small">${esc(t.depositHint)}</p>
-        ${r.paymentLink ? `<a class="btn" href="${esc(r.paymentLink)}" target="_blank" rel="noopener">${ic('cash')}${esc(t.payNow)}</a>` : ''}
+        ${!r.payOnline && r.paymentLink ? `<a class="btn" href="${esc(r.paymentLink)}" target="_blank" rel="noopener">${ic('cash')}${esc(t.payNow)}</a>` : ''}
       </div>` : ''}
       ${summaryCard().replace('class="summary-card"', 'class="summary-card ticket-lite"')}
       <div class="actions">
@@ -289,6 +291,17 @@
         <button class="btn ghost" type="button" id="again">${ic('plus')}${esc(t.bookAnother)}</button>
       </div>`;
     show('done');
+    const pay = $('#pay-online', el);
+    if (pay) pay.addEventListener('click', async () => {
+      pay.disabled = true;
+      try {
+        const x = await api('POST', `/api/bookings/${encodeURIComponent(r.token)}/checkout`, {});
+        location.href = x.url;
+      } catch {
+        toast(t.payFailed);
+        pay.disabled = false;
+      }
+    });
     $('#copy', el).addEventListener('click', async () => {
       try { await navigator.clipboard.writeText(r.manageUrl); toast(t.linkCopied); } catch { /* ignore */ }
     });

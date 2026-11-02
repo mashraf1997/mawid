@@ -1,6 +1,6 @@
 {
   "name": "mawid",
-  "version": "1.2.0",
+  "version": "1.3.0",
   "description": "Self-hosted appointment booking for salons, barbers, clinics and coaches. Bookings on WhatsApp, team calendars, reminders, 8 languages, zero commissions.",
   "main": "server.js",
   "license": "MIT",
@@ -9,8 +9,23 @@
     "type": "git",
     "url": "https://github.com/mashraf1997/mawid.git"
   },
-  "keywords": ["booking", "appointments", "scheduling", "calendar", "whatsapp", "salon", "barber", "clinic", "self-hosted", "arabic", "rtl", "hostinger"],
-  "engines": { "node": ">=18" },
+  "keywords": [
+    "booking",
+    "appointments",
+    "scheduling",
+    "calendar",
+    "whatsapp",
+    "salon",
+    "barber",
+    "clinic",
+    "self-hosted",
+    "arabic",
+    "rtl",
+    "hostinger"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
   "scripts": {
     "start": "node server.js",
     "dev": "node --watch server.js",
@@ -18,6 +33,7 @@
   },
   "dependencies": {
     "express": "^4.21.2",
+    "nodemailer": "^6.10.1",
     "qrcode": "^1.5.4"
   }
 }

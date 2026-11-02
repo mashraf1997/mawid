@@ -49,7 +49,8 @@ Mawid gives every business its **own booking page** on its own server and domain
 - 🔔 Sound alert for new bookings, QR code and printable poster, backups
 
 **For the server**
-- Node.js + Express, **2 dependencies**, no database to set up (atomic JSON files)
+- 🔌 **Optional connections**: online payments (Paymob, Stripe), automatic WhatsApp messages, email, phone notifications, daily backups ([details](#connections-optional))
+- Node.js + Express, **3 dependencies**, no database to set up (atomic JSON files)
 - Runs on the smallest VPS
 - **Automatic HTTPS** with Caddy, **setup code** to protect a fresh install, **demo mode**
 - **Agency mode**: one server hosts many clients, each on their own domain ([details](#agency-mode-host-all-your-clients-on-one-server))
@@ -118,6 +119,48 @@ npm install --omit=dev
 npm start
 ```
 
+## Connections (optional)
+
+Everything works without these. Turn on only what you need in **Admin → Connections**. Keys and passwords stay on your server: they are never sent to the browser and never included in exports or backups.
+
+### Online payments: Paymob or Stripe
+
+With a payment provider connected, customers pay the deposit online right after booking (or later from their booking link) and the booking is confirmed on its own.
+
+- **Paymob** (Egypt, Saudi Arabia, UAE, Oman, Pakistan): paste your secret key, public key, HMAC secret and integration IDs from the Paymob dashboard, then paste the callback URL shown in the panel as the *Transaction processed callback*.
+- **Stripe** (worldwide): paste your secret key (`sk_live_…` or `sk_test_…`). Optionally add a webhook to `https://your-domain/webhooks/stripe` for `checkout.session.completed` and paste its signing secret.
+- Each payment is checked with the provider when the customer comes back, and again by the webhook if they close the page. The amount and currency are verified and a payment is counted only once. Use test keys and **Open a test payment** to try it.
+- Your manual payment details and payment link still work when no provider is connected.
+
+### Automatic WhatsApp messages (WhatsApp Cloud API)
+
+Without this, the one-tap WhatsApp links keep working as before. With it, these messages go out on their own from your business number:
+
+| Message | Sent when | Template name |
+|---|---|---|
+| Booking confirmed | a booking becomes confirmed (auto-confirm, deposit paid, or you confirm it) | `mawid_confirmed` |
+| Day-before reminder | the day before, after 10:00 | `mawid_reminder` |
+
+1. Create an app at [Meta for Developers](https://developers.facebook.com/) with the WhatsApp product, and copy the **phone number ID** and a **permanent access token** (system user).
+2. WhatsApp only lets businesses start conversations with approved templates. Create each template with the exact text shown in the panel (copy button), wait for approval, then switch it on.
+3. **Send test** sends Meta's `hello_world` template to check the connection. Meta bills business-initiated conversations according to its own pricing.
+
+### Email (SMTP)
+
+Use any mailbox, for example your Hostinger email (`smtp.hostinger.com`, port 465 with SSL/TLS, or 587). With email set up, customers can now leave an optional email: they get the confirmation with a calendar invite, the deposit request, and a reminder the day before. Alerts and the daily backup copy can each be switched on or off.
+
+### Notifications on this device
+
+The admin can be installed on your phone's home screen like an app. Press **Turn on notifications** on each device that should get an instant notification for new activity, no Telegram needed (on iPhone, add the admin to the home screen first; iOS 16.4+). Telegram alerts still work too.
+
+### Automatic daily backups
+
+Every day the app saves a backup to `DATA_DIR/backups/` and keeps the last 14 days. Download any of them from the panel, or press **Back up now**. Turn on **Email me the daily backup** to keep a gzipped copy off the server. To restore, use **Settings → Backup → Restore backup**. If the app hits an error or a backup fails, you get an alert (at most once an hour).
+
+### White-label (agency mode)
+
+In the agency panel (`/hub` → Settings), set your agency name and website: every client page then says "powered by *your agency*" instead of Mawid, or you can hide the line completely. Client login screens show your name too.
+
 ## Agency mode: host all your clients on one server
 
 Freelancers and agencies can run **one Mawid server for many clients**. Each client gets their own fully separate booking page (own admin, password, data and photos) at `client.yourdomain.com` or their own domain, with automatic HTTPS. You manage everyone from one panel at `/hub`.
@@ -174,7 +217,7 @@ No-shows cost money, so Mawid can ask for a deposit on online bookings. In **Set
 - **How customers pay**: free text, for example `InstaPay: name@instapay · Vodafone Cash 010…`
 - **Payment link** (optional): any checkout page, such as a Stripe, PayPal or Paymob payment link
 
-After booking, the customer sees the amount, your payment details and a **Pay now** button, on the confirmation screen and on their private booking page. A booking with a deposit stays **pending** (even with auto-confirm on) until you press **Deposit received** on the Today screen or in the booking, which confirms it. Bookings you add yourself never ask for a deposit. Mawid doesn't handle money itself, so there are no fees and no payment keys to manage.
+After booking, the customer sees the amount, your payment details and a **Pay now** button, on the confirmation screen and on their private booking page. A booking with a deposit stays **pending** (even with auto-confirm on) until you press **Deposit received** on the Today screen or in the booking, which confirms it. Bookings you add yourself never ask for a deposit. By default Mawid doesn't handle money itself, so there are no fees and no payment keys to manage. Prefer automatic? Connect Paymob or Stripe and the deposit is paid and confirmed online ([Connections](#connections-optional)).
 
 ### Telegram notifications
 
@@ -188,7 +231,7 @@ The message includes a link straight to the Today screen. To send notifications 
 
 ### Multiple branches
 
-Each branch runs its own copy of Mawid: its own admin, services, team, calendar, data and WhatsApp number, usually on its own subdomain (`downtown.example.com`, `mall.example.com`…). Copies are tiny (about 60 MB of RAM each), so one small VPS can run many.
+Each branch runs its own copy of Mawid: its own admin, services, team, calendar, data and WhatsApp number, usually on its own subdomain (`downtown.example.com`, `mall.example.com`…). Copies are tiny (about 70 MB of RAM each), so one small VPS can run many.
 
 [`examples/branches/`](examples/branches) has a ready-to-use `docker-compose.yml` and `Caddyfile` for two branches behind automatic HTTPS. To add a branch, copy a service block, give it a new volume, and add one line to the `Caddyfile`. Point each subdomain's DNS at the server, run `docker compose up -d`, and open each subdomain's `/admin` to set it up. On a Hostinger VPS you can also deploy the template several times instead.
 
